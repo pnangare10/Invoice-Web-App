@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "npm build"
+    "start": "vite build"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
