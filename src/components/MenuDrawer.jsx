@@ -123,11 +123,10 @@ export default function PersistentDrawerLeft({ header }) {
   const [open, setOpen] = React.useState(isBrowser ? true : false);
   const [openSubMenuIndex, setOpenSubMenuIndex] = React.useState(null);
   const navigate = useNavigate();
-  const { logout, helo } = useAuth();
+  const { logout } = useAuth();
 
   const MENU_ITEMS = createMenuItems(() => {
     logout();
-    helo("Calling this from drawer");
   });
 
   const handleDrawerClose = () => {

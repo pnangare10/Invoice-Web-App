@@ -21,8 +21,8 @@ const Routes = () => {
           <Route path="/login" element={<LoginComponent />} />
         </Route>
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
-        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
+        {/* Protected Routes */}
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/create-invoices" element={<CreateInvoice />} />
           <Route path="/view-invoices" element={<ViewInvoices />} />
