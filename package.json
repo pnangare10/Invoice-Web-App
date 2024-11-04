@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "start": "vite build"
+    "start": "vite preview --port $PORT",
+    "heroku-postbuild": "vite build"
   },
   "dependencies": {
     "@emotion/react": "^11.11.1",
