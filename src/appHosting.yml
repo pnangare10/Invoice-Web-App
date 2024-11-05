@@ -1,0 +1,4 @@
+# Environment variables and secrets
+env:
+  - variable: VITE_APP_API_URL
+    value: https://easyledger-0b29e0d36ed6.herokuapp.com
