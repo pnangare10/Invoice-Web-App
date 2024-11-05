@@ -22,12 +22,15 @@ export const AuthProvider = (props) => {
   const isADmin = localStorage.getItem("IS_ADMIN")
     ? JSON.stringify(localStorage.getItem("IS_ADMIN"))
     : false;
+  const IS_LOGGED_IN = localStorage.getItem("IS_LOGGED_IN")
+    ? localStorage.getItem("IS_LOGGED_IN")
+    : false;
 
   const [token, setToken] = useState(getToken);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(isADmin);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(IS_LOGGED_IN);
 
   const navigate = useNavigate();
 
@@ -48,6 +51,8 @@ export const AuthProvider = (props) => {
         }
         setCurrentUser(data);
         setIsLoggedIn(true);
+        localStorage.setItem("IS_LOGGED_IN", true);
+        navigate("/dashboard");
       } catch (error) {
         console.error("Error fetching current user", error);
         toast.error("Error fetching current user");
@@ -63,6 +68,7 @@ export const AuthProvider = (props) => {
     localStorage.removeItem("USER"); // Remove user details as well
     localStorage.removeItem("CSRF_TOKEN");
     localStorage.removeItem("IS_ADMIN");
+    localStorage.removeItem("IS_LOGGED_IN");
     setToken(null);
     setCurrentUser(null);
     setIsLoggedIn(false);
