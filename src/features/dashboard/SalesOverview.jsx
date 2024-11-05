@@ -90,7 +90,7 @@ const SalesOverview = () => {
               <>
                 <SaleOverviewItem item={item} index={index} />
                 {index < SaleSummaryItems.length - 1 && (
-                  <Divider orientation="vertical" key={`${index}_divider`} thiccness={"2px"} flexItem variant="middle" />
+                  <Divider orientation="vertical" key={`${index}_divider1`} thiccness={"2px"} flexItem variant="middle" />
                 )}
               </>
             ))}
