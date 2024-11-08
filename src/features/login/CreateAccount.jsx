@@ -1,28 +1,18 @@
-import {
-  Box,
-  Checkbox,
-  Divider,
-  FormControlLabel,
-  TextField,
-  Typography
-} from "@mui/material";
+import { Box, Stack, styled, TextField, Typography } from "@mui/material";
 import Button from "@mui/material/Button";
 import MuiCard from "@mui/material/Card";
 import FormControl from "@mui/material/FormControl";
 import FormLabel from "@mui/material/FormLabel";
-import Stack from "@mui/material/Stack";
-import { styled } from "@mui/material/styles";
 import { useFormik } from "formik";
 import { jwtDecode } from "jwt-decode";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import api, { baseURL } from "../../api/springApi";
+import api from "../../api/springApi";
 import AppBar from "../../components/AppBar";
-import { FacebookIcon, GoogleIcon, SitemarkIcon } from "../../CustomIcons";
-import { validationSchema } from "../../schemas/loginForm"; // Assuming you have Yup schema here
+import { SitemarkIcon } from "../../CustomIcons";
+import signupValidationSchema from "../../schemas/signUpValidationSchema";
 import { useAuth } from "../auth/AuthContext";
-import ForgotPassword from "./ForgotPassword";
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: "flex",
@@ -68,49 +58,67 @@ const SignInContainer = styled(Stack)(({ theme }) => ({
   },
 }));
 
-const LoginComponent = () => {
+const SignupComponent = () => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { setToken, token, setIsLoggedIn, helo } = useAuth();
-  const [jwtToken, setJwtToken] = useState(null);
+  const { setToken, setIsLoggedIn } = useAuth();
   const navigate = useNavigate();
+
   const handleClickOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
+
   const formik = useFormik({
     initialValues: {
+      username: "",
       email: "",
       password: "",
+      confirmPassword: "",
+      companyName: "",
+      name: "",
     },
-    validationSchema,
+    validationSchema: signupValidationSchema, // Define validation schema specific for signup
     onSubmit: async (values) => {
+      if (values.password !== values.confirmPassword) {
+        toast.error("Passwords do not match");
+        return;
+      }
+
       try {
         setLoading(true);
         const data = {
-          username: values.email,
+          username: values.username,
+          email: values.email,
           password: values.password,
+          companyName: values.companyName,
+          name: values.name,
         };
-        const response = await api.post("/auth/public/signin", data);
 
-        toast.success("Login Successful");
-        formik.resetForm();
-        if (response.status === 200 && response.data.jwtToken) {
-          setJwtToken(response.data.jwtToken);
-          const decodedToken = jwtDecode(response.data.jwtToken);
-          handleSuccessfulLogin(response.data.jwtToken, decodedToken);
+        const response = await api.post("/auth/public/signup", data);
+
+        if (response.status === 200) {
+          // Assuming 201 Created for successful signup
+          toast.success("Signup Successful");
+          formik.resetForm();
+
+          if (response.data.jwtToken) {
+            const jwtToken = response.data.jwtToken;
+            const decodedToken = jwtDecode(jwtToken);
+            handleSuccessfulSignup(jwtToken, decodedToken);
+          } else {
+            navigate("/login");
+          }
         } else {
-          toast.error(
-            "Login failed. Please check your credentials and try again."
-          );
+          toast.error("Signup failed. Please try again.");
         }
       } catch (error) {
-        toast.error("Invalid credentials");
+        toast.error(error.response?.data?.message || "Signup failed");
       } finally {
         setLoading(false);
       }
     },
   });
 
-  const handleSuccessfulLogin = (token, decodedToken) => {
+  const handleSuccessfulSignup = (token, decodedToken) => {
     const user = {
       username: decodedToken.sub,
       roles: decodedToken.roles ? decodedToken.roles.split(",") : [],
@@ -118,7 +126,6 @@ const LoginComponent = () => {
     localStorage.setItem("JWT_TOKEN", token);
     localStorage.setItem("USER", JSON.stringify(user));
 
-    //store the token on the context state  so that it can be shared any where in our application by context provider
     setToken(token);
     setIsLoggedIn(true);
     navigate("/dashboard");
@@ -144,7 +151,19 @@ const LoginComponent = () => {
             variant="h4"
             sx={{ width: "100%", fontSize: "clamp(2rem, 10vw, 2.15rem)" }}
           >
-            Sign in
+            Create an Account
+          </Typography>
+          <Typography>
+            Already have an account?{" "}
+            <Link
+              component="button"
+              type="button"
+              onClick={() => navigate("/login")}
+              variant="body2"
+              sx={{ alignSelf: "baseline" }}
+            >
+              Login here
+            </Link>
           </Typography>
           <Box
             component="form"
@@ -157,21 +176,34 @@ const LoginComponent = () => {
               gap: 2,
             }}
           >
+            {/* Username Field */}
             <FormControl>
-              <FormLabel htmlFor="email">Username or Email</FormLabel>
+              <FormLabel htmlFor="username">Username</FormLabel>
+              <TextField
+                id="username"
+                name="username"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={formik.values.username}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.username && Boolean(formik.errors.username)
+                }
+                helperText={formik.touched.username && formik.errors.username}
+              />
+            </FormControl>
+
+            {/* Email Field */}
+            <FormControl>
+              <FormLabel htmlFor="email">Email</FormLabel>
               <TextField
                 id="email"
                 name="email"
                 type="email"
-                placeholder="your@email.com"
-                autoComplete="email"
                 fullWidth
                 variant="outlined"
-                color={
-                  formik.touched.email && formik.errors.email
-                    ? "error"
-                    : "primary"
-                }
                 value={formik.values.email}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -179,32 +211,38 @@ const LoginComponent = () => {
                 helperText={formik.touched.email && formik.errors.email}
               />
             </FormControl>
+
+            {/* Company Name Field */}
             <FormControl>
-              <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                <FormLabel htmlFor="password">Password</FormLabel>
-                <Link
-                  component="button"
-                  type="button"
-                  onClick={handleClickOpen}
-                  variant="body2"
-                  sx={{ alignSelf: "baseline" }}
-                >
-                  Forgot your password?
-                </Link>
-              </Box>
+              <FormLabel htmlFor="companyName">Company Name</FormLabel>
+              <TextField
+                id="companyName"
+                name="companyName"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={formik.values.companyName}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.companyName &&
+                  Boolean(formik.errors.companyName)
+                }
+                helperText={
+                  formik.touched.companyName && formik.errors.companyName
+                }
+              />
+            </FormControl>
+
+            {/* Password Field */}
+            <FormControl>
+              <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••"
-                autoComplete="current-password"
                 fullWidth
                 variant="outlined"
-                color={
-                  formik.touched.password && formik.errors.password
-                    ? "error"
-                    : "primary"
-                }
                 value={formik.values.password}
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
@@ -214,52 +252,37 @@ const LoginComponent = () => {
                 helperText={formik.touched.password && formik.errors.password}
               />
             </FormControl>
-            <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            />
-            <ForgotPassword open={open} handleClose={handleClose} />
+
+            {/* Confirm Password Field */}
+            <FormControl>
+              <FormLabel htmlFor="confirmPassword">Confirm Password</FormLabel>
+              <TextField
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                fullWidth
+                variant="outlined"
+                value={formik.values.confirmPassword}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.confirmPassword &&
+                  Boolean(formik.errors.confirmPassword)
+                }
+                helperText={
+                  formik.touched.confirmPassword &&
+                  formik.errors.confirmPassword
+                }
+              />
+            </FormControl>
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
               disabled={loading}
             >
-              Sign in
-            </Button>
-            <Typography sx={{ textAlign: "center" }}>
-              Don&apos;t have an account?{" "}
-              <Link
-                  component="button"
-                  type="button"
-                  onClick={() => navigate("/create-account")}
-                  variant="body2"
-                  sx={{ alignSelf: "baseline" }}
-                >
-                Sign up
-              </Link>
-            </Typography>
-          </Box>
-          <Divider>or</Divider>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() =>
-                (window.location.href = `${baseURL}/oauth2/authorization/google`)
-              }
-              startIcon={<GoogleIcon />}
-            >
-              Sign in with Google
-            </Button>
-
-            <Button
-              fullWidth
-              variant="outlined"
-              onClick={() => alert("Sign in with Facebook")}
-              startIcon={<FacebookIcon />}
-            >
-              Sign in with Facebook
+              Sign up
             </Button>
           </Box>
         </Card>
@@ -268,4 +291,4 @@ const LoginComponent = () => {
   );
 };
 
-export default LoginComponent;
+export default SignupComponent;

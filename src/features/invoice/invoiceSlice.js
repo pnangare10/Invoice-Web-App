@@ -6,6 +6,11 @@ const initialState = {
   storeState: INITIAL,
   invoiceId: null,
   invoiceState: INITIAL,
+  submitState: INITIAL,
+  customerState: INITIAL,
+  productState: INITIAL,
+  customersList: [],
+  productsList: []
 };
 
 const invoiceSlice = createSlice({
@@ -24,35 +29,126 @@ const invoiceSlice = createSlice({
     },
 
     addInvoice: (state) => {
-      state.storeState = LOADING;
+      state.submitState = LOADING;
     },
     addInvoiceSuccess: (state, action) => {
-      state.invoices.push(action.payload);
-      state.storeState = LOADED;
+      state.invoices = [action.payload, ...state.invoices];
+      state.submitState = LOADED;
     },
     addInvoiceFailure: (state) => {
-      state.storeState = ERROR;
+      state.submitState = ERROR;
     },
 
     deleteInvoice: (state) => {
-      state.storeState = LOADING;
+      state.invoiceState = LOADING;
     },
     deleteInvoiceSuccess: (state, action) => {
-      state.storeState = LOADED;
+      state.invoiceState = LOADED;
     },
     deleteInvoiceFailure: (state) => {
-      state.storeState = ERROR;
+      state.invoiceState = ERROR;
     },
 
     updateInvoice: (state) => {
-      state.storeState = LOADING;
+      state.invoiceState = LOADING;
     },
     updateInvoiceSuccess: (state, action) => {
-      state.storeState = LOADED;
+      state.invoiceState = LOADED;
     },
     updateInvoiceFailure: (state) => {
-      state.storeState = ERROR;
+      state.invoiceState = ERROR;
     },
+
+    resetSubmitState: (state) => {
+      state.submitState = INITIAL;
+    },
+
+    createCustomer: (state) => {
+      state.customerState = LOADING;
+    },
+    createCustomerSuccess: (state, action) => {
+      state.customerState = LOADED;
+      state.customersList.push(action.payload);
+    },
+    createCustomerFailure: (state) => {
+      state.customerState = ERROR;
+    },
+
+    getCustomers: (state) => {
+      state.customerState = LOADING;
+    },
+    getCustomersSuccess: (state, action) => {
+      state.customerState = LOADED;
+      state.customersList = action.payload;
+    },
+    getCustomersFailure: (state) => {
+      state.customerState = ERROR;
+    },
+
+    deleteCustomer: (state) => {
+      state.customerState = LOADING;
+    },
+    deleteCustomerSuccess: (state, action) => {
+      state.customerState = LOADED;
+    },
+    deleteCustomerFailure: (state) => {
+      state.customerState = ERROR;
+    },
+
+    updateCustomer: (state) => {
+      state.customerState = LOADING;
+    },
+    updateCustomerSuccess: (state, action) => {
+      state.customerState = LOADED;
+    },
+    updateCustomerFailure: (state) => {
+      state.customerState = ERROR;
+    },
+
+    //slices for product management
+    addProductFetch: (state) => {
+      state.productState = LOADING;
+    },
+    addProductSuccess: (state, action) => {
+      state.productState = LOADED;
+      state.productsList.push(action.payload);
+    },
+    addProductFailure: (state) => {
+      state.productState = ERROR;
+    },
+
+    updateProductFetch: (state) => {
+      state.productState = LOADING;
+    },
+    updateProductSuccess: (state, action) => {
+      state.productState = LOADED;
+
+    },
+    updateProductFailure: (state) => {
+      state.productState = ERROR;
+    },
+
+    deleteProductFetch: (state) => {
+      state.productState = LOADING;
+    },
+    deleteProductSuccess: (state, action) => {
+      state.productState = LOADED;
+    },
+    deleteProductFailure: (state) => {
+      state.productState = ERROR;
+    },
+      getProducts: (state) => {
+      state.productState = LOADING;
+    },
+    getProductsSuccess: (state, action) => {
+      state.productState = LOADED;
+      state.productsList = action.payload;
+    },
+    getProductsFailure: (state) => {
+      state.productState = ERROR;
+    }
+
+
   },
 });
 
@@ -72,6 +168,41 @@ export const {
   updateInvoice,
   updateInvoiceSuccess,
   updateInvoiceFailure,
+
+  createCustomer,
+  createCustomerSuccess,
+  createCustomerFailure,
+
+  getCustomers,
+  getCustomersSuccess,
+  getCustomersFailure,
+
+  deleteCustomer,
+  deleteCustomerSuccess,
+  deleteCustomerFailure,
+
+  updateCustomer,
+  updateCustomerSuccess,
+  updateCustomerFailure,
+
+  addProductFetch,
+  addProductSuccess,
+  addProductFailure,
+
+  updateProductFetch,
+  updateProductSuccess,
+  updateProductFailure,
+
+  deleteProductFetch,
+  deleteProductSuccess,
+  deleteProductFailure,
+
+  getProducts,
+  getProductsSuccess,
+  getProductsFailure,
+
+  resetSubmitState
+
 } = invoiceSlice.actions;
 
 export default invoiceSlice.reducer;

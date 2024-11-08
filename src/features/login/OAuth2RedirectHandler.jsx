@@ -6,7 +6,7 @@ import { useAuth } from '../auth/AuthContext';
 const OAuth2RedirectHandler = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { setToken, setIsAdmin } = useAuth();
+  const { setToken, setIsAdmin, setIsLoggedIn } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -30,6 +30,7 @@ const OAuth2RedirectHandler = () => {
 
         setToken(token);
         setIsAdmin(user.roles?.includes('ADMIN'));
+        setIsLoggedIn(true);
 
         setTimeout(() => {
           console.log("Navigating to dashboard");

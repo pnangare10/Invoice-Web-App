@@ -5,6 +5,7 @@ import AuthProvider from "../features/auth/AuthContext";
 import Dashboard from "../features/dashboard/Dashboard";
 import CreateInvoice from "../features/invoice/CreateInvoice";
 import ViewInvoices from "../features/invoice/ViewInvoices";
+import SignupComponent from "../features/login/CreateAccount";
 import LandingPage from "../features/login/LandinPage";
 import LoginComponent from "../features/login/LoginComponent";
 import OAuth2RedirectHandler from "../features/login/OAuth2RedirectHandler";
@@ -15,12 +16,13 @@ import RoleProtectedRoute from "./RoleProtectedRoute";
 const Routes = () => {
   return (
     <>
-      <Route element={<AuthProvider />}>
         <Route path="/" element={<LandingPage />} />
+      <Route element={<AuthProvider />}>
         <Route element={<LoginRoute />}>
           <Route path="/login" element={<LoginComponent />} />
         </Route>
         <Route path="/oauth2/redirect" element={<OAuth2RedirectHandler />} />
+        <Route path="/create-account" element={<SignupComponent />} />
         <Route element={<ProtectedRoute />}>
         {/* Protected Routes */}
           <Route path="/dashboard" element={<Dashboard />} />

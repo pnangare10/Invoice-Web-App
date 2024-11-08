@@ -22,6 +22,7 @@ import { styled, useTheme } from "@mui/material/styles";
 import * as React from "react";
 
 import { useMediaQuery } from "@mui/material";
+import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { DRAWER_WIDTH } from "../constants";
 import { useAuth } from "../features/auth/AuthContext";
@@ -55,6 +56,14 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   justifyContent: "flex-end",
 }));
 
+const underProgressToast = (msg) => {
+  toast.error(msg || "This feature is under progress.");
+};
+
+() => {
+  logout();
+}
+
 const createMenuItems = (logout) => {
   return [
     {
@@ -80,33 +89,34 @@ const createMenuItems = (logout) => {
         {
           label: "Inventory",
           value: "/inventory",
+          action: ()=> underProgressToast(),
           icon: <FileDownloadIcon />,
         },
         {
           label: "Purchase",
           value: "/inventory/purchase",
+          action: underProgressToast,
           icon: <FileDownloadIcon />,
         },
         {
           label: "Sales",
           value: "/inventory/sales",
+          action: underProgressToast,
           icon: <FileUploadIcon />,
         },
         {
           label: "Inward",
           value: "/inventory/inward",
+          action: underProgressToast,
           icon: <FileUploadIcon />,
         },
         {
           label: "Outward",
           value: "/inventory/outward",
+          action: underProgressToast,
           icon: <FileUploadIcon />,
         },
       ],
-    },
-    {
-      label: "trial",
-      value: "/trial",
     },
     {
       label: "Logout",
@@ -204,7 +214,7 @@ export default function PersistentDrawerLeft({ header }) {
                         key={subIndex + "1"}
                         onClick={() =>
                           subMenuItem.action
-                            ? item.action()
+                            ? subMenuItem.action()
                             : navigate(subMenuItem.value)
                         }
                       >

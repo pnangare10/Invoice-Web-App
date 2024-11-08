@@ -15,6 +15,8 @@ import * as Yup from "yup";
 import Button from "../../components/Button";
 import MainLayout from "../../components/MainLayout"; // Assuming MainLayout is your layout component
 import { INITIAL, LOADED, LOADING } from "../../helpers/constants";
+import AddCustomer from "./AddCustomer";
+import AddProduct from "./AddProduct";
 import DownloadModal from "./DownloadModal";
 import RecentInvoices from "./RecentInvoiceList";
 import useInvoice from "./useInvoice";
@@ -22,11 +24,13 @@ import useInvoice from "./useInvoice";
 const validationSchema = Yup.object().shape({
   invoiceDate: Yup.date().required("Invoice date is required"),
   invoiceNumber: Yup.string().required("Invoice number is required"),
-  customerName: Yup.string().required("Customer name is required"),
-  gstPercentage: Yup.number().required("GST percentage is required"),
-  items: Yup.array().of(
+  customerId: Yup.number().required("Customer is required"),
+  gstPercentage: Yup.number()
+    .required("GST percentage is required")
+    .min(0, "GST percentage must be non-negative"),
+  products: Yup.array().of(
     Yup.object().shape({
-      product: Yup.string().required("Product name is required"),
+      productId: Yup.number().required("Product is required"),
       qty: Yup.number()
         .min(1, "Quantity must be at least 1")
         .required("Quantity is required"),
@@ -38,33 +42,53 @@ const validationSchema = Yup.object().shape({
 });
 
 const CreateInvoice = () => {
-  const { handleAddInvoice, storeState, getInvoices, invoices, invoiceState } = useInvoice();
+  const {
+    handleAddInvoice,
+    storeState,
+    getInvoices,
+    invoices,
+    invoiceState,
+    customersList,
+    fetchCustomers,
+    fetchProducts,
+    productsList,
+    submitState,
+    resetSubmitState
+  } = useInvoice();
   const today = new Date().toISOString().split("T")[0];
   const [open, setOpen] = React.useState(false);
+  const [customerDialogOpen, setCustomerDialogOpen] = React.useState(false);
+  const [productDialogOpen, setProductDialogOpen] = React.useState(false);
+
+  useEffect(() => {
+    fetchCustomers();
+    fetchProducts();
+  }, []);
 
   const formik = useFormik({
     initialValues: {
       invoiceDate: today,
       invoiceNumber: "",
-      customerName: "",
+      customerId: "",
       gstPercentage: "",
-      products: [{ product: "", qty: 1, price: 0 }], // Changed 'items' to 'products'
+      products: [{ productId: "", qty: 1, price: 0 }],
     },
     validationSchema,
     onSubmit: (values) => {
       handleAddInvoice(values);
     },
   });
-
   useEffect(() => {
-    console.log(invoiceState);
-    if (invoiceState === INITIAL) getInvoices();
-    if (storeState === LOADED) setOpen(true);
-  }, [invoiceState, storeState]);
+    if (invoiceState === INITIAL) {
+      getInvoices();
+    }
+    if (submitState === LOADED) {
+      setOpen(true);
+      resetSubmitState();
+    }
+  }, [invoiceState, submitState]);
 
   const { values, errors, touched, handleChange, handleSubmit } = formik;
-
-
   const rightComponent = (
     <Grid container maxWidth={"100%"} spacing={2}>
       <Grid item container xs={7}>
@@ -104,17 +128,27 @@ const CreateInvoice = () => {
                 <Grid item xs={6}>
                   <TextField
                     select
-                    label="Customer Name"
-                    name="customerName"
+                    label="Customer"
+                    name="customerId"
                     fullWidth
-                    value={values.customerName}
+                    value={values.customerId || ""}
                     onChange={handleChange}
-                    error={touched.customerName && Boolean(errors.customerName)}
-                    helperText={touched.customerName && errors.customerName}
+                    error={touched.customerId && Boolean(errors.customerId)}
+                    helperText={touched.customerId && errors.customerId}
                   >
-                    {/* Replace with dynamic customer options */}
-                    <MenuItem value="Customer A">Customer A</MenuItem>
-                    <MenuItem value="Customer B">Customer B</MenuItem>
+                    {customersList?.map((customer) => (
+                      <MenuItem key={customer.id} value={customer.id}>
+                        {customer.customerName}
+                      </MenuItem>
+                    ))}
+
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={() => setCustomerDialogOpen(true)}
+                    >
+                      Add new customer
+                    </Button>
                   </TextField>
                 </Grid>
                 <Grid item xs={6}>
@@ -143,90 +177,90 @@ const CreateInvoice = () => {
                   </Typography>
                   <FormikProvider value={formik}>
                     <FieldArray
-                      name="products" // Changed 'items' to 'products'
+                      name="products"
                       render={(arrayHelpers) => (
                         <div>
-                          {formik.values.products.map(
-                            (
-                              product,
-                              index // Changed 'items' to 'products'
-                            ) => (
-                              <Grid
-                                container
-                                spacing={2}
-                                my={1}
-                                key={index}
-                                alignItems="center"
-                              >
-                                <Grid item xs={5}>
-                                  <TextField
-                                    select
-                                    label="Product"
-                                    name={`products[${index}].product`} // Changed 'items' to 'products'
-                                    fullWidth
-                                    value={product.product}
-                                    onChange={formik.handleChange} // Changed handleChange to formik.handleChange
-                                    error={Boolean(
-                                      formik.errors.products?.[index]?.product
-                                    )} // Changed 'items' to 'products'
-                                    helperText={
-                                      formik.errors.products?.[index]?.product
-                                    } // Changed 'items' to 'products'
+                          {formik.values.products?.map((product, index) => (
+                            <Grid
+                              container
+                              spacing={2}
+                              my={1}
+                              key={index}
+                              alignItems="center"
+                            >
+                              <Grid item xs={5}>
+                                <TextField
+                                  select
+                                  label="Product"
+                                  name={`products[${index}].productId`} // Changed product to productId
+                                  fullWidth
+                                  value={product.productId || ""}
+                                  onChange={formik.handleChange}
+                                  error={Boolean(
+                                    formik.errors.products?.[index]?.productId
+                                  )}
+                                  helperText={
+                                    formik.errors.products?.[index]?.productId
+                                  }
+                                >
+                                  {productsList?.map((product) => (
+                                    <MenuItem
+                                      key={product.id}
+                                      value={product.id}
+                                    >
+                                      {product.productName}
+                                    </MenuItem>
+                                  ))}
+                                  <Button
+                                    variant="outlined"
+                                    color="primary"
+                                    onClick={() => setProductDialogOpen(true)}
                                   >
-                                    {/* Replace these options with actual product data */}
-                                    <MenuItem value="Product A">
-                                      Product A
-                                    </MenuItem>
-                                    <MenuItem value="Product B">
-                                      Product B
-                                    </MenuItem>
-                                    <MenuItem value="Product C">
-                                      Product C
-                                    </MenuItem>
-                                  </TextField>
-                                </Grid>
-                                <Grid item xs={3}>
-                                  <TextField
-                                    label="Quantity"
-                                    type="number"
-                                    name={`products[${index}].qty`} // Changed 'items' to 'products'
-                                    fullWidth
-                                    value={product.qty}
-                                    onChange={formik.handleChange} // Changed handleChange to formik.handleChange
-                                    error={Boolean(
-                                      formik.errors.products?.[index]?.qty
-                                    )} // Changed 'items' to 'products'
-                                    helperText={
-                                      formik.errors.products?.[index]?.qty
-                                    } // Changed 'items' to 'products'
-                                  />
-                                </Grid>
-                                <Grid item xs={3}>
-                                  <TextField
-                                    label="Price"
-                                    type="number"
-                                    name={`products[${index}].price`} // Changed 'items' to 'products'
-                                    fullWidth
-                                    value={product.price}
-                                    onChange={formik.handleChange} // Changed handleChange to formik.handleChange
-                                    error={Boolean(
-                                      formik.errors.products?.[index]?.price
-                                    )} // Changed 'items' to 'products'
-                                    helperText={
-                                      formik.errors.products?.[index]?.price
-                                    } // Changed 'items' to 'products'
-                                  />
-                                </Grid>
-                                <Grid item xs={1}>
-                                  <IconButton
-                                    onClick={() => arrayHelpers.remove(index)}
-                                  >
-                                    <Cancel color="error" />
-                                  </IconButton>
-                                </Grid>
+                                    Add new product
+                                  </Button>
+                                </TextField>
                               </Grid>
-                            )
-                          )}
+                              <Grid item xs={3}>
+                                <TextField
+                                  label="Quantity"
+                                  type="number"
+                                  name={`products[${index}].qty`}
+                                  fullWidth
+                                  value={product.qty}
+                                  onChange={formik.handleChange}
+                                  error={Boolean(
+                                    formik.errors.products?.[index]?.qty
+                                  )}
+                                  helperText={
+                                    formik.errors.products?.[index]?.qty
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={3}>
+                                <TextField
+                                  label="Price"
+                                  type="number"
+                                  name={`products[${index}].price`}
+                                  fullWidth
+                                  value={product.price}
+                                  onChange={formik.handleChange}
+                                  error={Boolean(
+                                    formik.errors.products?.[index]?.price
+                                  )}
+                                  helperText={
+                                    formik.errors.products?.[index]?.price
+                                  }
+                                />
+                              </Grid>
+                              <Grid item xs={1}>
+                                <IconButton
+                                  onClick={() => arrayHelpers.remove(index)}
+                                >
+                                  <Cancel color="error" />
+                                </IconButton>
+                              </Grid>
+                            </Grid>
+                          ))}
                           <Button
                             startIcon={<AddCircle />}
                             onClick={() =>
@@ -252,7 +286,7 @@ const CreateInvoice = () => {
                     type="submit"
                     variant="contained"
                     color="primary"
-                    loading={storeState === LOADING}
+                    loading={submitState === LOADING}
                     fullWidth
                   >
                     Submit Invoice
@@ -272,7 +306,19 @@ const CreateInvoice = () => {
   return (
     <>
       <MainLayout rightComponent={rightComponent} />
-      <DownloadModal open={open} onClose={() => setOpen(false)} invoiceId={invoices[invoices.length - 1]?.id}/>
+      <DownloadModal
+        open={open}
+        onClose={() => setOpen(false)}
+        invoiceId={invoices[invoices.length - 1]?.id}
+      />
+      <AddCustomer
+        open={customerDialogOpen}
+        handleClose={() => setCustomerDialogOpen(false)}
+      />
+      <AddProduct
+        open={productDialogOpen}
+        handleClose={() => setProductDialogOpen(false)}
+      />
     </>
   );
 };

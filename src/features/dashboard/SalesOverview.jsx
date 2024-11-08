@@ -83,16 +83,17 @@ const SalesOverview = () => {
             item
             container
             xs={12}
+            key={SaleSummaryItems.length}
             alignItems={"center"}
             justifyContent={"space-between"}
           >
             {SaleSummaryItems.map((item, index) => (
-              <>
+              <React.Fragment key={`sales_overview_item_${index}`}>
                 <SaleOverviewItem item={item} index={index} />
                 {index < SaleSummaryItems.length - 1 && (
-                  <Divider orientation="vertical" key={`${index}_divider1`} thiccness={"2px"} flexItem variant="middle" />
+                  <Divider orientation="vertical" thiccness={"2px"} flexItem variant="middle" />
                 )}
-              </>
+              </React.Fragment>
             ))}
           </Grid>
         </Grid>
